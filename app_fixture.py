@@ -25,18 +25,25 @@ with st.form("registro_form"):
     registro_submit = st.form_submit_button("Registrarse")
 
     if registro_submit:
-        if not correo or not dni or not aceptar:
-            st.warning("Completa todos los campos y acepta los términos.")
+    if not correo or not dni or not aceptar:
+        st.warning("Completa todos los campos y acepta los términos.")
+        st.stop()
+    else:
+        if os.path.exists(PARTICIPACIONES_FILE):
+            participaciones_df = pd.read_csv(PARTICIPACIONES_FILE)
+        else:
+            participaciones_df = pd.DataFrame(columns=["correo", "dni"])
+
+        # Validación de duplicados
+        ya_registrado = (
+            (participaciones_df["correo"].str.lower() == correo.lower()) |
+            (participaciones_df["dni"].astype(str) == str(dni))
+        ).any()
+
+        if ya_registrado:
+            st.error("⚠️ Este correo o DNI ya fue utilizado.")
             st.stop()
         else:
-            if os.path.exists(PARTICIPACIONES_FILE):
-                participaciones_df = pd.read_csv(PARTICIPACIONES_FILE)
-                if ((participaciones_df["correo"] == correo) & (participaciones_df["dni"] == dni)).any():
-                    st.error("Ya has participado.")
-                    st.stop()
-            else:
-                participaciones_df = pd.DataFrame(columns=["correo", "dni"])
-
             st.success("Registro exitoso. Ahora puedes realizar tus predicciones.")
 
 # === Formulario de predicciones ===
